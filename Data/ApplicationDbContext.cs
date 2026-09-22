@@ -11,5 +11,7 @@ namespace CloseReady.Data
         {
         }
     public DbSet<Client> Clients { get; set; }
+    public DbSet<CollectionCycle> CollectionCycles { get; set; }
+
     }
 }

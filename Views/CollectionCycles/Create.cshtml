@@ -1,0 +1,60 @@
+﻿@model CloseReady.Models.CollectionCycle
+
+@{
+    var client = ViewBag.Client as CloseReady.Models.Client;
+    ViewData["Title"] = "New Cycle";
+    }
+
+<div class="mb-4">
+    <a asp-controller="Clients"
+       asp-action="Details"
+       asp-route-id="@client!.Id"
+       class="text-decoration-none text-dark">
+        ← Back to @client.Name
+    </a>
+</div>
+
+<h2 class="fw-bold mb-4">New Cycle</h2>
+
+<div class="card border-0 shadow-sm" style="max-width: 500px;">
+    <div class="card-body p-4">
+
+        <form asp-action="Create" method="post">
+
+            <input type="hidden" asp-for="ClientId" value="@client.Id" />
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label">
+                    Cycle Name
+                </label>
+
+                <input asp-for="Name"
+                       class="form-control"
+                       placeholder="e.g. July Close" />
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="DueDate" class="form-label">
+                    Due Date
+                </label>
+
+                <input asp-for="DueDate"
+                       type="date"
+                       class="form-control" />
+            </div>
+
+            <button type="submit" class="btn btn-dark">
+                Create Cycle
+            </button>
+
+            <a asp-controller="Clients"
+               asp-action="Details"
+               asp-route-id="@client.Id"
+               class="btn btn-link">
+                Cancel
+            </a>
+
+        </form>
+
+    </div>
+</div>

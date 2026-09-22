@@ -55,6 +55,13 @@ namespace CloseReady.Controllers
         return NotFound();
         }
 
+      var cycles = _context.CollectionCycles
+          .Where(c => c.ClientId == id)
+          .OrderByDescending(c => c.DueDate)
+          .ToList();
+
+      ViewBag.CollectionCycles = cycles;
+
       return View(client);
       }
 
