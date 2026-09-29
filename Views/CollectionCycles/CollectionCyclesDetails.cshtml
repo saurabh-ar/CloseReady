@@ -32,9 +32,28 @@
         </div>
     </div>
 
-    <span class="badge bg-light text-primary border px-3 py-2">
-        @Model.Status
-    </span>
+    <div class="d-flex align-items-center gap-2">
+
+        <span class="badge bg-light text-primary border px-3 py-2">
+            @Model.Status
+        </span>
+
+        <form asp-action="CreateUploadLink"
+              method="post"
+              class="d-inline">
+
+            <input type="hidden"
+                   name="cycleId"
+                   value="@Model.Id" />
+
+            <button type="submit"
+                    class="btn btn-dark btn-sm">
+                Create Upload Link
+            </button>
+
+        </form>
+
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-4">

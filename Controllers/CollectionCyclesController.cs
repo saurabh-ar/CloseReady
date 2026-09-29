@@ -1,5 +1,6 @@
 ﻿using CloseReady.Data;
 using CloseReady.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
 using Microsoft.EntityFrameworkCore;
@@ -101,24 +102,24 @@ namespace CloseReady.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UploadDocument(int id, IFormFile file)
       {
-        var document = await _context.CycleDocuments.Include(d => d.CollectionCycle).FirstOrDefaultAsync(d => d.Id == id);
+      var document = await _context.CycleDocuments.Include(d => d.CollectionCycle).FirstOrDefaultAsync(d => d.Id == id);
 
-        if (document == null)
-          {
-          return NotFound();
-          }
+      if (document == null)
+        {
+        return NotFound();
+        }
 
-        if (file == null || file.Length == 0)
-          {
-          return RedirectToAction(
-              "Details",
-              new { id = document.CollectionCycleId }
-          );
-          }
+      if (file == null || file.Length == 0)
+        {
+        return RedirectToAction(
+            "Details",
+            new { id = document.CollectionCycleId }
+        );
+        }
 
-        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(),"wwwroot","uploads");
+      var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
-        Directory.CreateDirectory(uploadsFolder);
+      Directory.CreateDirectory(uploadsFolder);
 
       var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
       document.FileName = file.FileName;
@@ -126,10 +127,10 @@ namespace CloseReady.Controllers
 
       var filePath = Path.Combine(uploadsFolder, fileName);
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
-          {
-          await file.CopyToAsync(stream);
-          }
+      using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+        await file.CopyToAsync(stream);
+        }
 
       document.Status = "Received";
 
@@ -142,7 +143,124 @@ namespace CloseReady.Controllers
 
       await _context.SaveChangesAsync();
 
-      return RedirectToAction("Details",new { id = document.CollectionCycleId });
+      return RedirectToAction("Details", new { id = document.CollectionCycleId });
+      }
+
+    /// <summary>
+    /// September Close (Cycle name)
+    ///   ↓
+    /// Create Upload Link
+    ///   ↓
+    /// Check existing active link
+    ///   ↓
+    /// No link → create token
+    ///   ↓
+    /// Save to database
+    ///   ↓
+    /// Return to September Close
+    /// </summary>
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateUploadLink(int cycleId)
+      {
+      var cycle = await _context.CollectionCycles.FirstOrDefaultAsync(c => c.Id == cycleId);
+
+      if (cycle == null)
+        {
+        return NotFound();
+        }
+
+      var existingLink = await _context.ClientUploadLinks.FirstOrDefaultAsync(l => l.CollectionCycleId == cycleId && l.IsActive);
+
+      if (existingLink == null)
+        {
+        var uploadLink = new ClientUploadLink
+          {
+          CollectionCycleId = cycleId,
+          Token = Guid.NewGuid().ToString(),
+          CreatedAt = DateTime.UtcNow,
+          IsActive = true
+          };
+
+        _context.ClientUploadLinks.Add(uploadLink);
+
+        await _context.SaveChangesAsync();
+        }
+
+      return RedirectToAction("Details", new { id = cycleId });
+      }
+
+    [AllowAnonymous]
+    [HttpGet("/upload/{token}")]
+    public async Task<IActionResult> ClientUpload(string token)
+      {
+      var uploadLink = await _context.ClientUploadLinks
+        .Include(l => l.CollectionCycle)
+        .ThenInclude(c => c.Client)
+        .Include(l => l.CollectionCycle)
+        .ThenInclude(c => c.CycleDocuments)
+        .ThenInclude(d => d.DocumentType)
+        .FirstOrDefaultAsync(l => l.Token == token && l.IsActive);
+
+      if (uploadLink == null)
+        {
+        return NotFound();
+        }
+
+      return View("CollectionCyclesClientUpload", uploadLink);
+      }
+
+
+    [AllowAnonymous]
+    [HttpPost("/upload/{token}/{documentId}")]
+    public async Task<IActionResult> ClientUploadFile(string token,int documentId,IFormFile file)
+      {
+      var uploadLink = await _context.ClientUploadLinks
+          .FirstOrDefaultAsync(l =>
+              l.Token == token &&
+              l.IsActive);
+
+      if (uploadLink == null)
+        {
+        return NotFound();
+        }
+
+      var document = await _context.CycleDocuments
+          .FirstOrDefaultAsync(d =>
+              d.Id == documentId &&
+              d.CollectionCycleId == uploadLink.CollectionCycleId);
+
+      if (document == null)
+        {
+        return NotFound();
+        }
+
+      if (file == null || file.Length == 0)
+        {
+        return RedirectToAction(nameof(ClientUpload), new { token });
+        }
+
+      var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(),"wwwroot","uploads");
+
+      Directory.CreateDirectory(uploadsFolder);
+
+      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+      var filePath = Path.Combine(uploadsFolder, fileName);
+
+      using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+        await file.CopyToAsync(stream);
+        }
+
+      document.FileName = file.FileName;
+      document.StoredFileName = fileName;
+      document.Status = "Received";
+
+      await _context.SaveChangesAsync();
+
+      return RedirectToAction( nameof(ClientUpload),new { token });
       }
 
     }

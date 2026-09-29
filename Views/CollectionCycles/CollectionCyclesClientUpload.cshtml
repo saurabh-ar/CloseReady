@@ -1,0 +1,64 @@
+﻿@model CloseReady.Models.ClientUploadLink
+
+@{
+    ViewData["Title"] = "Upload Documents";
+    }
+
+<div class="container mt-5">
+
+    <h1>Upload Documents</h1>
+
+    <p class="text-muted">
+        @Model.CollectionCycle.Client.Name
+        · @Model.CollectionCycle.Name
+    </p>
+
+    <div class="card mt-4">
+        <div class="card-body">
+
+            <h4>Required Documents</h4>
+
+            <p class="text-muted">
+                Please upload the requested documents below.
+            </p>
+
+            @foreach (var document in Model.CollectionCycle.CycleDocuments)
+                {
+                <div class="border-bottom py-3">
+
+                    <strong>
+                        @document.DocumentType.Name
+                    </strong>
+                    @if (document.Status == "Received")
+                        {
+                        <span class="badge bg-success ms-2">Received</span>
+                        }
+                    else
+                        {
+                        <span class="badge bg-secondary ms-2">Missing</span>
+                        }
+                    <form asp-action="ClientUploadFile"
+                          asp-route-token="@Model.Token"
+                          asp-route-documentId="@document.Id"
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="mt-2">
+
+                        <input type="file"
+                               name="file"
+                               class="form-control mb-2" />
+
+                        <button type="submit"
+                                class="btn btn-dark btn-sm">
+                            Upload
+                        </button>
+
+                    </form>
+
+                </div>
+                }
+
+        </div>
+    </div>
+
+</div>
