@@ -49,7 +49,9 @@
                         {
                         <tr>
                             <td class="px-4 py-3">
-                                @cycle.Name
+                                <a asp-controller="CollectionCycles" asp-action="Details" asp-route-id="@cycle.Id" class="text-decoration-none text-dark fw-semibold">
+                                    @cycle.Name
+                                </a>
                             </td>
 
                             <td class="py-3">
