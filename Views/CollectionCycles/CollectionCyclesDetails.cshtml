@@ -55,7 +55,37 @@
 
     </div>
 </div>
+@if (ViewBag.UploadLink != null)
+    {
+    var uploadLink = ViewBag.UploadLink as CloseReady.Models.ClientUploadLink;
+    var clientUploadUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/upload/{uploadLink!.Token}";
 
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+
+            <h5 class="mb-2">Client Upload Link</h5>
+
+            <p class="text-muted small mb-3">
+                Share this link with the client so they can upload their documents.
+            </p>
+
+            <div class="input-group">
+                <input type="text"
+                       id="clientUploadLink"
+                       class="form-control"
+                       value="@clientUploadUrl"
+                       readonly />
+
+                <button type="button"
+                        class="btn btn-dark"
+                        onclick="copyUploadLink()">
+                    Copy Link
+                </button>
+            </div>
+
+        </div>
+    </div>
+    }
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4">
 
@@ -175,3 +205,12 @@
     </div>
 
 </div>
+<script defer>
+    function copyUploadLink() {
+        const link = document.getElementById("clientUploadLink");
+
+        navigator.clipboard.writeText(link.value);
+
+        alert("Upload link copied.");
+    }
+</script>

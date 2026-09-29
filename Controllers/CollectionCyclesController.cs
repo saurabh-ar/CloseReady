@@ -70,18 +70,30 @@ namespace CloseReady.Controllers
       return RedirectToAction("Details", "Clients", new { id = cycle.ClientId });
       }
 
-    public IActionResult Details(int id)
+    public IActionResult Details(int? id)
       {
-      var cycle = _context.CollectionCycles.Include(c => c.Client).FirstOrDefault(c => c.Id == id);
+      var cycle = _context.CollectionCycles
+          .Include(c => c.Client)
+          .FirstOrDefault(c => c.Id == id);
 
       if (cycle == null)
         {
         return NotFound();
         }
 
-      var documents = _context.CycleDocuments.Include(d => d.DocumentType).Where(d => d.CollectionCycleId == id).OrderBy(d => d.DocumentType.Name).ToList();
+      var documents = _context.CycleDocuments
+          .Include(d => d.DocumentType)
+          .Where(d => d.CollectionCycleId == id)
+          .OrderBy(d => d.DocumentType.Name)
+          .ToList();
+
+      var uploadLink = _context.ClientUploadLinks
+          .FirstOrDefault(l =>
+              l.CollectionCycleId == id &&
+              l.IsActive);
 
       ViewBag.Documents = documents;
+      ViewBag.UploadLink = uploadLink;
 
       return View("CollectionCyclesDetails", cycle);
       }
