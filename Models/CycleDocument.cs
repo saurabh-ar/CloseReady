@@ -14,6 +14,10 @@
 
     public string Status { get; set; } = "Missing";
 
+    public string? FileName { get; set; }
+
+    public string? StoredFileName { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
   }
