@@ -42,6 +42,25 @@
                        type="date"
                        class="form-control" />
             </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Required Documents</label>
+
+                @foreach (var documentType in ViewBag.DocumentTypes)
+                    {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               name="SelectedDocumentTypeIds"
+                               value="@documentType.Id"
+                               id="document_@documentType.Id" />
+
+                        <label class="form-check-label"
+                               for="document_@documentType.Id">
+                            @documentType.Name
+                        </label>
+                    </div>
+                    }
+            </div>
 
             <button type="submit" class="btn btn-dark">
                 Create Cycle

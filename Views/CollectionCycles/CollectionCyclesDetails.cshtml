@@ -1,0 +1,130 @@
+﻿@model CloseReady.Models.CollectionCycle
+
+@{
+    ViewData["Title"] = Model.Name;
+
+    var documents = ViewBag.Documents
+        as List<CloseReady.Models.CycleDocument>
+        ?? new List<CloseReady.Models.CycleDocument>();
+
+    var totalDocuments = documents.Count;
+    var receivedDocuments = documents.Count(d => d.Status == "Received");
+
+    var progress = totalDocuments == 0
+        ? 0
+        : (int)Math.Round((double)receivedDocuments / totalDocuments * 100);
+    }
+
+<div class="mb-4">
+    <a asp-controller="Clients"
+       asp-action="Details"
+       asp-route-id="@Model.ClientId"
+       class="text-decoration-none text-dark">
+        ← Back to @Model.Client.Name
+    </a>
+</div>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">@Model.Name</h2>
+        <div class="text-muted">
+            @Model.Client.Name · Due @Model.DueDate.ToString("M/d/yyyy")
+        </div>
+    </div>
+
+    <span class="badge bg-light text-primary border px-3 py-2">
+        @Model.Status
+    </span>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between mb-2">
+            <span class="fw-semibold">Completion</span>
+            <span class="fw-semibold">@progress%</span>
+        </div>
+
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar bg-dark"
+                 role="progressbar"
+                 style="width: @progress%;"
+                 aria-valuenow="@progress"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+            </div>
+        </div>
+
+        <div class="text-muted small mt-2">
+            @receivedDocuments of @totalDocuments required documents accepted
+        </div>
+
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+
+    <div class="card-body p-4">
+
+        <h5 class="mb-4">Documents</h5>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Status</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @if (documents.Count == 0)
+                        {
+                        <tr>
+                            <td colspan="3" class="text-muted">
+                                No documents have been selected for this cycle.
+                            </td>
+                        </tr>
+                        }
+                    else
+                        {
+                        foreach (var document in documents)
+                            {
+                            <tr>
+                                <td>
+                                    @document.DocumentType.Name
+                                </td>
+
+                                <td>
+                                    @if (document.Status == "Received")
+                                        {
+                                        <span class="badge bg-success">
+                                            Received
+                                        </span>
+                                        }
+                                    else
+                                        {
+                                        <span class="badge bg-light text-secondary border">
+                                            Missing
+                                        </span>
+                                        }
+                                </td>
+
+                                <td class="text-muted">
+                                    —
+                                </td>
+                            </tr>
+                            }
+                        }
+
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+
+</div>

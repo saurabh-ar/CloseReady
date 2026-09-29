@@ -1,6 +1,7 @@
 ﻿using CloseReady.Data;
 using CloseReady.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CloseReady.Controllers
   {
@@ -25,35 +26,65 @@ namespace CloseReady.Controllers
         }
 
       ViewBag.Client = client;
+      ViewBag.DocumentTypes = _context.DocumentTypes.Where(d => d.IsActive).OrderBy(d => d.Name).ToList();
 
       return View();
       }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Create(CollectionCycle cycle)
+    public IActionResult Create(CollectionCycle cycle,int[] SelectedDocumentTypeIds)
       {
-      if (!ModelState.IsValid)
+        if (!ModelState.IsValid)
+          {
+          var client = _context.Clients.FirstOrDefault(c => c.Id == cycle.ClientId && c.IsActive);
+
+          ViewBag.Client = client;
+
+          ViewBag.DocumentTypes = _context.DocumentTypes.Where(d => d.IsActive).OrderBy(d => d.Name).ToList();
+
+          return View(cycle);
+          }
+
+        cycle.Status = "In Progress";
+        cycle.CreatedAt = DateTime.UtcNow;
+
+        _context.CollectionCycles.Add(cycle);
+        _context.SaveChanges();
+
+        foreach (var documentTypeId in SelectedDocumentTypeIds)
+          {
+            var cycleDocument = new CycleDocument
+              {
+              CollectionCycleId = cycle.Id,
+              DocumentTypeId = documentTypeId,
+              Status = "Missing",
+              CreatedAt = DateTime.UtcNow
+              };
+            _context.CycleDocuments.Add(cycleDocument);
+          }
+        _context.SaveChanges();
+
+        return RedirectToAction("Details","Clients",new { id = cycle.ClientId });
+      }
+
+    public IActionResult Details(int id)
+      {
+      var cycle = _context.CollectionCycles
+          .Include(c => c.Client)
+          .FirstOrDefault(c => c.Id == id);
+
+      if (cycle == null)
         {
-        var client = _context.Clients
-            .FirstOrDefault(c => c.Id == cycle.ClientId && c.IsActive);
-
-        ViewBag.Client = client;
-
-        return View(cycle);
+        return NotFound();
         }
 
-      cycle.Status = "In Progress";
-      cycle.CreatedAt = DateTime.UtcNow;
+      var documents = _context.CycleDocuments.Include(d => d.DocumentType).Where(d => d.CollectionCycleId == id).OrderBy(d => d.DocumentType.Name).ToList();
 
-      _context.CollectionCycles.Add(cycle);
-      _context.SaveChanges();
+      ViewBag.Documents = documents;
 
-      return RedirectToAction(
-          "Details",
-          "Clients",
-          new { id = cycle.ClientId }
-      );
+      return View("CollectionCyclesDetails", cycle);
       }
+
     }
   }
