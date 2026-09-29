@@ -91,6 +91,13 @@ namespace CloseReady.Controllers
           .FirstOrDefault(l =>
               l.CollectionCycleId == id &&
               l.IsActive);
+      var allDocumentsReceived = documents.Any() && documents.All(d => d.Status == "Received");
+
+      if (allDocumentsReceived && cycle.Status != "Ready")
+        {
+          cycle.Status = "Ready";
+          _context.SaveChanges();
+        }
 
       ViewBag.Documents = documents;
       ViewBag.UploadLink = uploadLink;
@@ -271,6 +278,22 @@ namespace CloseReady.Controllers
       document.Status = "Received";
 
       await _context.SaveChangesAsync();
+
+      var allDocumentsReceived = await _context.CycleDocuments
+          .Where(d => d.CollectionCycleId == uploadLink.CollectionCycleId)
+          .AllAsync(d => d.Status == "Received");
+
+      if (allDocumentsReceived)
+        {
+        var cycle = await _context.CollectionCycles
+            .FirstOrDefaultAsync(c => c.Id == uploadLink.CollectionCycleId);
+
+        if (cycle != null)
+          {
+          cycle.Status = "Ready";
+          await _context.SaveChangesAsync();
+          }
+        }
 
       return RedirectToAction( nameof(ClientUpload),new { token });
       }
