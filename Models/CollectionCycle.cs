@@ -15,5 +15,6 @@
     public string Status { get; set; } = "In Progress";
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public ICollection<CycleDocument> CycleDocuments { get; set; }
     }
   }

@@ -13,6 +13,7 @@ namespace CloseReady.Data
     public DbSet<Client> Clients { get; set; }
     public DbSet<CollectionCycle> CollectionCycles { get; set; }
     public DbSet<DocumentType> DocumentTypes { get; set; }
+    public DbSet<ClientUploadLink> ClientUploadLinks { get; set; }
     public DbSet<CycleDocument> CycleDocuments { get; set; }
     //add a small seed configuration so our database automatically contains the initial checklist.
     protected override void OnModelCreating(ModelBuilder modelBuilder)
