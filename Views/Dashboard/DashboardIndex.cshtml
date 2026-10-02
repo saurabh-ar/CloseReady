@@ -1,0 +1,94 @@
+﻿@{
+   ViewData["Title"] = "Dashboard";
+ }
+
+<div class="container py-5">
+
+    <div class="mb-4">
+        <h1 class="fw-bold">Dashboard</h1>
+        <p class="text-muted">
+            Overview of your client document collection.
+        </p>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-2">Total Clients</p>
+                    <h2 class="fw-bold mb-0">@ViewBag.TotalClients</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-2">Active Cycles</p>
+                    <h2 class="fw-bold mb-0">@ViewBag.ActiveCycles</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-2">In Progress</p>
+                    <h2 class="fw-bold mb-0">@ViewBag.InProgressCycles</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <p class="text-muted mb-2">Ready</p>
+                    <h2 class="fw-bold mb-0">@ViewBag.ReadyCycles</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="row g-4 mt-2">
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h5 class="mb-2">In Progress Cycles</h5>
+
+                    <p class="text-muted mb-3">
+                        View cycles that still have outstanding documents.
+                    </p>
+
+                    <a asp-action="InProgress"
+                       class="btn btn-dark">
+                        View In Progress
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+
+                    <h5 class="mb-2">Missing Documents</h5>
+
+                    <p class="text-muted mb-3">
+                        See which documents are still required from clients.
+                    </p>
+
+                    <a asp-action="MissingDocuments"
+                       class="btn btn-dark">
+                        View Missing Documents
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

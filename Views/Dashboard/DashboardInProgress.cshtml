@@ -1,0 +1,94 @@
+﻿@model IEnumerable<CloseReady.Models.CollectionCycle>
+
+@{
+   ViewData["Title"] = "In Progress Cycles";
+ }
+
+<div class="container py-5">
+
+    <div class="mb-4">
+        <a asp-controller="Dashboard"
+           asp-action="Index"
+           class="text-decoration-none">
+            ← Back to Dashboard
+        </a>
+
+        <h1 class="fw-bold mt-4">In Progress Cycles</h1>
+
+        <p class="text-muted">
+            Collection cycles that still have outstanding documents.
+        </p>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+
+            @if (!Model.Any())
+                {
+                <p class="text-muted mb-0">
+                    There are no cycles currently in progress.
+                </p>
+                }
+            else
+                {
+                <div class="table-responsive">
+
+                    <table class="table align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Cycle</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var cycle in Model)
+                                {
+                                <tr>
+
+                                    <td>
+                                        @cycle.Client?.Name
+                                    </td>
+
+                                    <td>
+                                        @cycle.Name
+                                    </td>
+
+                                    <td>
+                                        @cycle.DueDate.ToString("dd-MM-yyyy")
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-warning text-dark">
+                                            @cycle.Status
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <a asp-controller="CollectionCycles"
+                                           asp-action="Details"
+                                           asp-route-id="@cycle.Id"
+                                           class="btn btn-sm btn-dark">
+                                            View
+                                        </a>
+                                    </td>
+
+                                </tr>
+                                }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+                }
+
+        </div>
+    </div>
+
+</div>

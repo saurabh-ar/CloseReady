@@ -1,0 +1,95 @@
+﻿@model List<CloseReady.Models.CycleDocument>
+
+@{
+    ViewData["Title"] = "Missing Documents";
+    }
+
+<div class="container py-4">
+
+    <a asp-action="Index" class="text-decoration-none">
+        ← Back to Dashboard
+    </a>
+
+    <h1 class="mt-4 mb-1">Missing Documents</h1>
+
+    <p class="text-muted mb-4">
+        Documents that are still outstanding from clients.
+    </p>
+
+    <div class="card border-0 shadow-sm">
+
+        <div class="card-body p-4">
+
+            @if (!Model.Any())
+                {
+                <div class="text-center py-5">
+                    <h5>All documents are received.</h5>
+                    <p class="text-muted mb-0">
+                        There are currently no missing documents.
+                    </p>
+                </div>
+                }
+            else
+                {
+                <div class="table-responsive">
+
+                    <table class="table align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th>Cycle</th>
+                                <th>Missing Document</th>
+                                <th>Due Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var document in Model)
+                                {
+                                <tr>
+
+                                    <td>
+                                        @document.CollectionCycle.Client?.Name
+                                    </td>
+
+                                    <td>
+                                        @document.CollectionCycle.Name
+                                    </td>
+
+                                    <td>
+                                        <strong>
+                                            @document.DocumentType.Name
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @document.CollectionCycle.DueDate.ToString("dd-MM-yyyy")
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="CollectionCycles"
+                                           asp-action="Details"
+                                           asp-route-id="@document.CollectionCycleId"
+                                           class="btn btn-dark btn-sm">
+                                            View
+                                        </a>
+                                    </td>
+
+                                </tr>
+                                }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+                }
+
+        </div>
+
+    </div>
+
+</div>
