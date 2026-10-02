@@ -28,7 +28,7 @@ namespace CloseReady.Services
 
       email.Subject = subject;
 
-      email.Body = new TextPart("plain")
+      email.Body = new TextPart("html")
         {
         Text = body
         };

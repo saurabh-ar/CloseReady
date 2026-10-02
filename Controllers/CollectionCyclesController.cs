@@ -12,10 +12,12 @@ namespace CloseReady.Controllers
     {
     private readonly ApplicationDbContext _context;
     private readonly IEmailService _emailService;
-    public CollectionCyclesController(ApplicationDbContext context, IEmailService emailService)
+    private readonly IConfiguration _configuration;
+    public CollectionCyclesController(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration)
       {
       _context = context;
       _emailService = emailService;
+      _configuration = configuration;
       }
 
     [HttpGet]
@@ -307,45 +309,89 @@ namespace CloseReady.Controllers
     [HttpPost]
     public async Task<IActionResult> SendUploadLinkEmail(int cycleId)
       {
-      var cycle = await _context.CollectionCycles
-          .Include(c => c.Client)
-          .FirstOrDefaultAsync(c => c.Id == cycleId);
+          var cycle = await _context.CollectionCycles
+              .Include(c => c.Client)
+              .FirstOrDefaultAsync(c => c.Id == cycleId);
 
-      if (cycle == null)
-        {
-        return NotFound();
-        }
+          if (cycle == null)
+            {
+            return NotFound();
+            }
 
-      var uploadLink = await _context.ClientUploadLinks
-          .FirstOrDefaultAsync(l =>
-              l.CollectionCycleId == cycleId &&
-              l.IsActive);
+          if (string.IsNullOrWhiteSpace(cycle.Client?.Email))
+            {
+            TempData["ErrorMessage"] = "Client email address is missing. Please update the client details first.";
 
-      if (uploadLink == null)
-        {
-        return NotFound();
-        }
+            return RedirectToAction( nameof(Details),  new { id = cycleId });
+            }
+          var uploadLink = await _context.ClientUploadLinks
+                  .FirstOrDefaultAsync(l =>
+                      l.CollectionCycleId == cycleId &&
+                      l.IsActive);
 
-      var clientUploadUrl =
-          $"{Request.Scheme}://{Request.Host}/upload/{uploadLink.Token}";
+          if (uploadLink == null)
+            {
+            return NotFound();
+            }
 
-      await _emailService.SendEmailAsync(
-      cycle.Client!.Email,
-          $"Documents Required - {cycle.Name}",
-          $"""
-          Hi {cycle.Client.Name},
+          var appBaseUrl = _configuration["AppBaseUrl"]?? throw new InvalidOperationException("AppBaseUrl is not configured.");
 
-          Please upload the required documents for your {cycle.Name} collection cycle using the link below:
+          var clientUploadUrl = $"{appBaseUrl.TrimEnd('/')}/upload/{uploadLink.Token}";
 
-          {clientUploadUrl}
+      await _emailService.SendEmailAsync(cycle.Client!.Email,
+              $"Documents Required - {cycle.Name}",
+              $"""
+                  <!DOCTYPE html>
+                  <html>
+                  <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
 
-          Due Date: {cycle.DueDate:M/d/yyyy}
+                      <h2 style="color: #222;">Documents Required</h2>
 
-          Thank you,
-          CloseReady
-          """);
+                      <p>Hi {cycle.Client.Name},</p>
+
+                      <p>
+                          Please upload the required documents for your
+                          <strong>{cycle.Name}</strong> collection cycle.
+                      </p>
+
+                      <p>
+                          <strong>Due Date:</strong> {cycle.DueDate:M/d/yyyy}
+                      </p>
+
+                      <p>
+                          <a href="{clientUploadUrl}"
+                             style="
+                                 display: inline-block;
+                                 padding: 12px 20px;
+                                 background-color: #212529;
+                                 color: white;
+                                 text-decoration: none;
+                                 border-radius: 5px;
+                             ">
+                              Upload Documents
+                          </a>
+                      </p>
+
+                      <p>
+                          If the button above does not work, you can use this link:
+                      </p>
+
+                      <p>
+                          <a href="{clientUploadUrl}">
+                              {clientUploadUrl}
+                          </a>
+                      </p>
+
+                      <p>
+                          Thank you,<br />
+                          <strong>CloseReady</strong>
+                      </p>
+
+                  </body>
+                  </html>
+                  """);
+      TempData["SuccessMessage"] =  $"Upload link emailed successfully to {cycle.Client.Email}.";
       return RedirectToAction(nameof(Details), new { id = cycleId });
-      
       }
 
     }
