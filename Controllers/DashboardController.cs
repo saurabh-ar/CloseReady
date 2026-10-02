@@ -1,4 +1,5 @@
 ﻿using CloseReady.Data;
+using CloseReady.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,10 +8,12 @@ namespace CloseReady.Controllers
   public class DashboardController : Controller
     {
     private readonly ApplicationDbContext _context;
+    private readonly IEmailService _emailService;
 
-    public DashboardController(ApplicationDbContext context)
+    public DashboardController(ApplicationDbContext context, IEmailService emailService)
       {
       _context = context;
+      _emailService = emailService;
       }
 
     /// <summary>
@@ -69,7 +72,18 @@ namespace CloseReady.Controllers
       return View("DashboardMissingDocuments", missingDocuments);
       }
 
+    /// <summary>
+    /// Workflow: Dashboard → Email Service → Gmail SMTP → Test Recipient
+    /// What it does: Sends a test email to verify Gmail SMTP configuration.
+    /// replace the gmail with your gmail.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> SendTestEmail()
+      {
+      await _emailService.SendEmailAsync("yourtestaccount@gmail.com", "CloseReady Email Test","This is a test email from CloseReady.");
 
+      return Content("Test email sent successfully.");
+      }
 
     }
   }

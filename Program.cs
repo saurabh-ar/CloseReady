@@ -1,4 +1,5 @@
 using CloseReady.Data;
+using CloseReady.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +15,13 @@ namespace CloseReady
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+            // Tell the app to read EmailSettings values from appsettings.json
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
+            // Whenever IEmailService is requested, give EmailService.
+            // This way the controller only knows about the interface, not the details.
+            builder.Services.AddScoped<IEmailService, EmailService>();
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
