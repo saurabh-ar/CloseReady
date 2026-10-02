@@ -1,5 +1,6 @@
 ﻿using CloseReady.Data;
 using CloseReady.Models;
+using CloseReady.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Elfie.Serialization;
@@ -10,10 +11,11 @@ namespace CloseReady.Controllers
   public class CollectionCyclesController : Controller
     {
     private readonly ApplicationDbContext _context;
-
-    public CollectionCyclesController(ApplicationDbContext context)
+    private readonly IEmailService _emailService;
+    public CollectionCyclesController(ApplicationDbContext context, IEmailService emailService)
       {
       _context = context;
+      _emailService = emailService;
       }
 
     [HttpGet]
@@ -296,6 +298,54 @@ namespace CloseReady.Controllers
         }
 
       return RedirectToAction( nameof(ClientUpload),new { token });
+      }
+
+    /// <summary>
+    /// Workflow: Collection Cycle → Upload Link → Client Email
+    /// What it does: Sends the active client upload link to the client's email address.
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> SendUploadLinkEmail(int cycleId)
+      {
+      var cycle = await _context.CollectionCycles
+          .Include(c => c.Client)
+          .FirstOrDefaultAsync(c => c.Id == cycleId);
+
+      if (cycle == null)
+        {
+        return NotFound();
+        }
+
+      var uploadLink = await _context.ClientUploadLinks
+          .FirstOrDefaultAsync(l =>
+              l.CollectionCycleId == cycleId &&
+              l.IsActive);
+
+      if (uploadLink == null)
+        {
+        return NotFound();
+        }
+
+      var clientUploadUrl =
+          $"{Request.Scheme}://{Request.Host}/upload/{uploadLink.Token}";
+
+      await _emailService.SendEmailAsync(
+      cycle.Client!.Email,
+          $"Documents Required - {cycle.Name}",
+          $"""
+          Hi {cycle.Client.Name},
+
+          Please upload the required documents for your {cycle.Name} collection cycle using the link below:
+
+          {clientUploadUrl}
+
+          Due Date: {cycle.DueDate:M/d/yyyy}
+
+          Thank you,
+          CloseReady
+          """);
+      return RedirectToAction(nameof(Details), new { id = cycleId });
+      
       }
 
     }

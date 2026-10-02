@@ -80,7 +80,7 @@ namespace CloseReady.Controllers
     [HttpGet]
     public async Task<IActionResult> SendTestEmail()
       {
-      await _emailService.SendEmailAsync("yourtestaccount@gmail.com", "CloseReady Email Test","This is a test email from CloseReady.");
+      await _emailService.SendEmailAsync("kavyanshnaiducr@gmail.com", "[URGENT] App Email Test", "This is a test email from CloseReady.");
 
       return Content("Test email sent successfully.");
       }

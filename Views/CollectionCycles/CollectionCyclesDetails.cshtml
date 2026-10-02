@@ -81,6 +81,21 @@
                         onclick="copyUploadLink()">
                     Copy Link
                 </button>
+
+                <form asp-action="SendUploadLinkEmail"
+                      method="post"
+                      class="d-inline">
+
+                    <input type="hidden"
+                           name="cycleId"
+                           value="@Model.Id" />
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Email Client
+                    </button>
+
+                </form>
             </div>
 
         </div>
