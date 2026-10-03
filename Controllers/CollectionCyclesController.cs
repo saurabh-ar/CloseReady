@@ -13,6 +13,8 @@ namespace CloseReady.Controllers
     private readonly ApplicationDbContext _context;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
+    private static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx", ".xls", ".xlsx" };
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
     public CollectionCyclesController(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration)
       {
       _context = context;
@@ -132,19 +134,42 @@ namespace CloseReady.Controllers
         return NotFound();
         }
 
+      // Validate file
       if (file == null || file.Length == 0)
         {
+        TempData["ErrorMessage"] = "Please select a file to upload.";
+
         return RedirectToAction(
-            "Details",
-            new { id = document.CollectionCycleId }
-        );
+            nameof(Details),
+            new { id = document.CollectionCycleId });
+        }
+
+      if (file.Length > MaxFileSize)
+        {
+        TempData["ErrorMessage"] =
+            "The file size cannot exceed 10 MB.";
+
+        return RedirectToAction(
+            nameof(Details),
+            new { id = document.CollectionCycleId });
+        }
+
+      var extension = Path.GetExtension(file.FileName);
+
+      if (!AllowedExtensions.Contains(
+              extension,
+              StringComparer.OrdinalIgnoreCase))
+        {
+        TempData["ErrorMessage"] =  "This file type is not supported. Allowed types are PDF, JPG, PNG, DOC, DOCX, XLS and XLSX.";
+
+        return RedirectToAction( nameof(Details), new { id = document.CollectionCycleId });
         }
 
       var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 
       Directory.CreateDirectory(uploadsFolder);
 
-      var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+      var fileName = Guid.NewGuid() + extension;
       document.FileName = file.FileName;
       document.StoredFileName = fileName;
 
@@ -237,7 +262,7 @@ namespace CloseReady.Controllers
 
     [AllowAnonymous]
     [HttpPost("/upload/{token}/{documentId}")]
-    public async Task<IActionResult> ClientUploadFile(string token,int documentId,IFormFile file)
+    public async Task<IActionResult> ClientUploadFile( string token,  int documentId,  IFormFile file)
       {
       var uploadLink = await _context.ClientUploadLinks
           .FirstOrDefaultAsync(l =>
@@ -259,20 +284,54 @@ namespace CloseReady.Controllers
         return NotFound();
         }
 
+      // Validate file
       if (file == null || file.Length == 0)
         {
-        return RedirectToAction(nameof(ClientUpload), new { token });
+        TempData["ErrorMessage"] = "Please select a file to upload.";
+        TempData["ErrorDocumentId"] = documentId;
+        return RedirectToAction(
+            nameof(ClientUpload),
+            new { token });
         }
 
-      var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(),"wwwroot","uploads");
+      if (file.Length > MaxFileSize)
+        {
+        TempData["ErrorMessage"] =
+            "The file size cannot exceed 10 MB.";
+        TempData["ErrorDocumentId"] = documentId;
+        return RedirectToAction(
+            nameof(ClientUpload),
+            new { token });
+        }
+
+      var extension = Path.GetExtension(file.FileName);
+
+      if (!AllowedExtensions.Contains(
+              extension,
+              StringComparer.OrdinalIgnoreCase))
+        {
+        TempData["ErrorMessage"]    = "This file type is not supported. Allowed types are PDF, JPG, PNG, DOC, DOCX, XLS and XLSX.";
+        TempData["ErrorDocumentId"] = documentId;
+
+        return RedirectToAction( nameof(ClientUpload),  new { token });
+        }
+
+      var uploadsFolder = Path.Combine(
+          Directory.GetCurrentDirectory(),
+          "wwwroot",
+          "uploads");
 
       Directory.CreateDirectory(uploadsFolder);
 
-      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+      var fileName = $"{Guid.NewGuid()}{extension}";
 
-      var filePath = Path.Combine(uploadsFolder, fileName);
+      var filePath = Path.Combine(
+          uploadsFolder,
+          fileName);
 
-      using (var stream = new FileStream(filePath, FileMode.Create))
+      using (var stream = new FileStream(
+          filePath,
+          FileMode.Create))
         {
         await file.CopyToAsync(stream);
         }
@@ -284,22 +343,27 @@ namespace CloseReady.Controllers
       await _context.SaveChangesAsync();
 
       var allDocumentsReceived = await _context.CycleDocuments
-          .Where(d => d.CollectionCycleId == uploadLink.CollectionCycleId)
+          .Where(d =>
+              d.CollectionCycleId == uploadLink.CollectionCycleId)
           .AllAsync(d => d.Status == "Received");
 
       if (allDocumentsReceived)
         {
         var cycle = await _context.CollectionCycles
-            .FirstOrDefaultAsync(c => c.Id == uploadLink.CollectionCycleId);
+            .FirstOrDefaultAsync(c =>
+                c.Id == uploadLink.CollectionCycleId);
 
         if (cycle != null)
           {
           cycle.Status = "Ready";
+
           await _context.SaveChangesAsync();
           }
         }
 
-      return RedirectToAction( nameof(ClientUpload),new { token });
+      return RedirectToAction(
+          nameof(ClientUpload),
+          new { token });
       }
 
     /// <summary>

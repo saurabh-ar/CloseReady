@@ -2,7 +2,9 @@
 
 @{
     ViewData["Title"] = "Upload Documents";
-    }
+
+    var errorDocumentId = TempData["ErrorDocumentId"]?.ToString();
+}
 
 <div class="container mt-5">
 
@@ -12,6 +14,23 @@
         @Model.CollectionCycle.Client.Name
         · @Model.CollectionCycle.Name
     </p>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+    <div id="errorMessage"
+         class="alert alert-danger alert-dismissible fade show mt-3"
+         role="alert">
+
+        <strong>Error!</strong>
+        @TempData["ErrorMessage"]
+
+        <button type="button"
+                class="btn-close"
+                aria-label="Close"
+                onclick="closeErrorMessage()">
+        </button>
+    </div>
+    }
 
     <div class="card mt-4">
         <div class="card-body">
@@ -24,19 +43,25 @@
 
             @foreach (var document in Model.CollectionCycle.CycleDocuments)
                 {
-                <div class="border-bottom py-3">
+                <div class="border-bottom py-3 @(errorDocumentId == document.Id.ToString() ? "upload-error-highlight rounded p-3" : "")">
 
                     <strong>
                         @document.DocumentType.Name
                     </strong>
+
                     @if (document.Status == "Received")
                         {
-                        <span class="badge bg-success ms-2">Received</span>
+                        <span class="badge bg-success ms-2">
+                            Received
+                        </span>
                         }
                     else
                         {
-                        <span class="badge bg-secondary ms-2">Missing</span>
+                        <span class="badge bg-secondary ms-2">
+                            Missing
+                        </span>
                         }
+
                     <form asp-action="ClientUploadFile"
                           asp-route-token="@Model.Token"
                           asp-route-documentId="@document.Id"
@@ -62,3 +87,26 @@
     </div>
 
 </div>
+<style>
+    .upload-error-highlight {
+        border: 2px solid #dc3545 !important;
+        background-color: #fff5f5;
+    }
+</style>
+<script defer>
+    setTimeout(function () {
+        closeErrorMessage();
+    }, 5000);
+
+    function closeErrorMessage() {
+        const message = document.getElementById("errorMessage");
+
+        if (message) {
+            message.classList.remove("show");
+
+            setTimeout(function () {
+                message.remove();
+            }, 150);
+        }
+    }
+</script>
